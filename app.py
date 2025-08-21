@@ -1281,7 +1281,7 @@ def chat_with_pdf(question, index, chunks, model, messages=None):
     
     # Get relevant context from document
     relevant_chunks = faiss_retriever(question, index, chunks)
-    print(relevant_chunks)
+    # print(relevant_chunks)
     context = "\n\n".join(relevant_chunks)
     
     # Get conversation context using summarization approach
