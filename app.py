@@ -1054,6 +1054,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 # ------------------ CONFIG ------------------ #
 
 os.environ["STREAMLIT_WATCHER_TYPE"] = "none"
+os.environ["STREAMLIT_WATCHDOG"] = "false"
 
 # PDF_PATH = "sample_docs/deep learning.pdf"  # Update path
 PDF_PATH = "sample_docs/Team_Workflow_Responsbilities.pdf"
