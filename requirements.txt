@@ -1,0 +1,12 @@
+fastapi
+faiss-cpu
+numpy
+streamlit
+PyPDF2
+python-dotenv
+langchain
+langchain-groq
+langchain-text-splitters
+langchain-huggingface
+sentence-transformers
+uvicorn[standard]
