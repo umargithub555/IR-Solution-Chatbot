@@ -1,48 +1,65 @@
-**IR Solution Chatbot**
+ # 💬 IR Solution Chatbot (FastAPI)
 
-A chatbot designed for information retrieval (IR), enabling instant and accurate answers from a knowledge base of documents.
+This is an Information Retrieval (IR) Chatbot API built with FastAPI, FAISS, and Groq API.
+It enables instant and accurate answers from a knowledge base of documents using vector search + AI generation.
 
-**Features**
+Query Understanding → Natural language input with context
 
-**Intelligent Q&A** – Context-aware answers to natural language queries
+Knowledge Base → Retrieves grounded responses from documents
 
-**Knowledge Base Integration** – Retrieves grounded responses from specified documents
+AI Generation → Uses Groq API for fluent and accurate answers
 
-**Scalable & Modular** – Easy to extend with new data sources or APIs
+## 🚀 Features
 
-**Vector Search** – Fast and efficient document lookup using FAISS
+Intelligent Q&A with context-aware answers
 
-**User-Friendly Interface** – Simple and intuitive chat experience
+Knowledge Base Integration for document-based retrieval
 
-**Technologies**
+Vector Search (FAISS) for fast and efficient document lookup
 
-**Backend** – FastAPI
+Scalable & Modular architecture for easy extensions
 
-**Core AI** – Hugging Face Transformers (embeddings) + Groq API (generation)
+User-Friendly Interface for smooth chat experience
 
-**Vector Database** – Faiss
+## 📦 Tech Stack
 
-Dependencies – Managed with requirements.txt
+**Backend:** FastAPI
 
-**Gettings Started**
+**Core AI:** Hugging Face Transformers (embeddings) + Groq API (generation)
 
-# Clone repository
+**Vector Database:** FAISS
 
+**Dependencies:** Managed with requirements.txt
+
+**Environment:** Python 3.12
+
+
+## ⚙️ Installation & Setup
+
+### 1. Clone the repository
+```bash
 git clone https://github.com/HighQDesk-Products/ir-document-chat-bot.git
 cd ir-solution-chatbot
+```
 
-# Create virtual environment
-
+### 2. Create a Virtual Environment
+```bash
 python -m venv venv
-source venv/bin/activate # Linux/Mac
-venv\Scripts\activate # Windows
+source venv/bin/activate   # for Linux/Mac
+venv\Scripts\activate      # for Windows
+```
 
-# Install dependencies
-
+### 3. Install dependencies
+```bash
 pip install -r requirements.txt
+```
 
-# Run server
-
+### 4. Run the Project
+```bash
 uvicorn app.main:app --reload
+```
 
-API available at: http://127.0.0.1:8000
+### 🌐 API Access
+Once the server is running, the API will be available at:
+
+👉 http://127.0.0.1:8000
