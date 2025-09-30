@@ -1,0 +1,2088 @@
+<!-- 
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IR Solution ChatBot</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 15px 20px;
+        text-align: center;
+        position: relative;
+      }
+
+      .header h1 {
+        color: white;
+        font-size: 1.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .header .subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        margin-top: 5px;
+        font-weight: 300;
+      }
+
+      /* PDF Selection Styles */
+      .pdf-selection {
+        margin-top: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .pdf-selection label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      #pdf-selector {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-size: 0.9rem;
+        outline: none;
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        min-width: 200px;
+      }
+
+      #pdf-selector:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      #pdf-selector:focus {
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+      }
+
+      #pdf-selector option {
+        background: #667eea;
+        color: white;
+        padding: 8px;
+      }
+
+      .selected-doc-info {
+        margin-top: 8px;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      .chat-wrapper {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        overflow: hidden;
+      }
+
+      #chat-container {
+        width: 100%;
+        max-width: 800px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .messages-container {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+      }
+
+      .messages-container::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .messages-container::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 3px;
+      }
+
+      .messages-container::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+      }
+
+      .messages-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+      }
+
+      .message {
+        margin-bottom: 20px;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .message-wrapper.user {
+        flex-direction: row-reverse;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .avatar.user {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+      }
+
+      .avatar.assistant {
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        color: white;
+      }
+
+      .message-content {
+        max-width: 75%;
+        padding: 15px 18px;
+        border-radius: 18px;
+        position: relative;
+        word-wrap: break-word;
+        line-height: 1.5;
+        font-size: 14px;
+      }
+
+      .user .message-content {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-bottom-right-radius: 6px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      .assistant .message-content {
+        background: #f8f9fa;
+        color: #333;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom-left-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Formatted content styles */
+      .formatted-content {
+        line-height: 1.6;
+      }
+
+      .formatted-content h1,
+      .formatted-content h2,
+      .formatted-content h3,
+      .formatted-content h4 {
+        margin: 1em 0 0.5em 0;
+        color: #2c3e50;
+      }
+
+      .formatted-content p {
+        margin: 0.8em 0;
+      }
+
+      .formatted-content ul,
+      .formatted-content ol {
+        margin: 0.8em 0;
+        padding-left: 1.5em;
+      }
+
+      .formatted-content li {
+        margin: 0.4em 0;
+      }
+
+      .formatted-content blockquote {
+        border-left: 4px solid #667eea;
+        padding-left: 1em;
+        margin: 1em 0;
+        color: #6c757d;
+        font-style: italic;
+      }
+
+      .formatted-content code {
+        background: rgba(0, 0, 0, 0.05);
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.9em;
+      }
+
+      .formatted-content pre {
+        background: #2d2d2d;
+        color: #f8f8f2;
+        padding: 1em;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1em 0;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.9em;
+        line-height: 1.5;
+      }
+
+      .formatted-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1em 0;
+      }
+
+      .formatted-content table th,
+      .formatted-content table td {
+        border: 1px solid #dee2e6;
+        padding: 0.75em;
+        text-align: left;
+      }
+
+      .formatted-content table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+      }
+
+      .formatted-content table tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+
+      .formatted-content a {
+        color: #667eea;
+        text-decoration: none;
+      }
+
+      .formatted-content a:hover {
+        text-decoration: underline;
+      }
+
+      .typing {
+        background: #e9ecef !important;
+        color: #666 !important;
+        font-style: italic;
+      }
+
+      .typing-animation {
+        display: inline-block;
+      }
+
+      .typing-animation::after {
+        content: "●●●";
+        animation: typing 1.4s infinite;
+        color: #007bff;
+      }
+
+      @keyframes typing {
+        0%,
+        60%,
+        100% {
+          opacity: 0.3;
+        }
+        30% {
+          opacity: 1;
+        }
+      }
+
+      .input-section {
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      #input-container {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        position: relative;
+      }
+
+      .input-wrapper {
+        flex: 1;
+        position: relative;
+      }
+
+      #user-input {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        border-radius: 25px;
+        outline: none;
+        font-size: 14px;
+        font-family: inherit;
+        background: white;
+        transition: all 0.3s ease;
+        resize: none;
+        min-height: 50px;
+        max-height: 120px;
+        line-height: 1.4;
+      }
+
+      #user-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      #user-input::placeholder {
+        color: #adb5bd;
+      }
+
+      #send-button {
+        width: 50px;
+        height: 50px;
+        border: none;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        flex-shrink: 0;
+      }
+
+      #send-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+      }
+
+      #send-button:active {
+        transform: translateY(0);
+      }
+
+      #send-button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .welcome-message {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .welcome-message i {
+        font-size: 48px;
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+
+      .status-indicator {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.8rem;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #28a745;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .error-message {
+        background: #f8d7da !important;
+        color: #721c24 !important;
+        border: 1px solid #f5c6cb !important;
+      }
+
+      .copy-button {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 4px;
+        color: white;
+        padding: 4px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .message-content:hover .copy-button {
+        opacity: 1;
+      }
+
+      .formatted-heading,
+      .formatted-paragraph,
+      .formatted-list,
+      .formatted-blockquote,
+      .formatted-codeblock {
+        margin-bottom: 1em;
+      }
+
+      .formatted-paragraph:last-child,
+      .formatted-list:last-child,
+      .formatted-codeblock:last-child {
+        margin-bottom: 0;
+      }
+
+      .formatted-heading {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-top: 1.5em;
+      }
+
+      .formatted-list {
+        padding-left: 1.2em;
+        list-style-type: disc;
+      }
+
+      .formatted-list li {
+        margin-bottom: 0.5em;
+      }
+
+      .formatted-blockquote {
+        border-left: 4px solid #667eea;
+        padding: 0.8em 1em;
+        font-style: italic;
+        color: #555;
+        background-color: #f0f4f8;
+        border-radius: 4px;
+      }
+
+      .formatted-codeblock {
+        background: #f4f4f4 !important;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1em;
+        overflow-x: auto;
+      }
+
+      .formatted-codeblock code {
+        background: none;
+        font-size: 0.9em;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .chat-wrapper {
+          padding: 10px;
+        }
+
+        .message-content {
+          max-width: 85%;
+          padding: 12px 15px;
+          font-size: 13px;
+        }
+
+        .avatar {
+          width: 32px;
+          height: 32px;
+          font-size: 14px;
+        }
+
+        .header h1 {
+          font-size: 1.4rem;
+        }
+
+        .pdf-selection {
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        #pdf-selector {
+          min-width: 180px;
+        }
+
+        .input-section {
+          padding: 15px;
+        }
+
+        #user-input {
+          font-size: 16px;
+        }
+
+        .formatted-content pre {
+          padding: 0.8em;
+          font-size: 0.85em;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .message-content {
+          max-width: 90%;
+        }
+
+        .header {
+          padding: 10px 15px;
+        }
+
+        .header h1 {
+          font-size: 1.2rem;
+        }
+
+        .pdf-selection {
+          margin-top: 10px;
+        }
+
+        .formatted-content pre {
+          padding: 0.6em;
+          font-size: 0.8em;
+        }
+      }
+
+      /* No PDF selected warning */
+      .no-pdf-warning {
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        color: #856404;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      .input-disabled {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>
+        <i class="fas fa-robot"></i>
+        IR Solution ChatBot
+      </h1>
+      <div class="subtitle">Your intelligent document assistant</div>
+      
+      <div class="pdf-selection">
+        <label for="pdf-selector">
+          <i class="fas fa-file-pdf"></i> Select Document:
+        </label>
+        <select id="pdf-selector" onchange="handlePDFSelection()">
+          <option value="">-- Choose a document --</option>
+          <option value="BD_and_PM_Workflow_Management.pdf">BD and PM Workflow Management</option>
+          <option value="Business_Development_Process.pdf">Business Development Process</option>
+          <option value="Office_Admin_Process.pdf">Office Admin Process</option>
+          <option value="PM_Project_Team_Workflow.pdf">PM Project Team Workflow</option>
+          <option value="Project_Manager_Responsibilities.pdf">Project Manager Responsibilities</option>
+          <option value="Team_Workflow_Responsbilities.pdf">Team Workflow Responsibilities</option>
+          <option value="Zoho_Sprints_Management_Process.pdf">Zoho Sprints Management Process</option>
+        </select>
+      </div>
+      
+      <div class="selected-doc-info" id="selected-doc-info" style="display: none;">
+        <i class="fas fa-check-circle"></i>
+        <span id="selected-doc-name"></span>
+      </div>
+
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        Online
+      </div>
+    </div>
+
+    <div class="chat-wrapper">
+      <div id="chat-container">
+        <div class="messages-container" id="messages-container">
+          <div class="welcome-message" id="welcome-message">
+            <i class="fas fa-comments"></i>
+            <div>Welcome to IR Solution ChatBot!</div>
+            <div>
+              Please select a document from the dropdown above to start chatting.
+            </div>
+            <div class="no-pdf-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              You must select a document before asking questions.
+            </div>
+          </div>
+        </div>
+
+        <div class="input-section">
+          <div id="input-container" class="input-disabled">
+            <div class="input-wrapper">
+              <textarea
+                id="user-input"
+                placeholder="Select a document first..."
+                rows="1"
+                disabled
+              ></textarea>
+            </div>
+            <button
+              id="send-button"
+              onclick="sendMessage()"
+              aria-label="Send message"
+              disabled
+            >
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = window.location.hostname === "localhost"
+        ? "http://127.0.0.1:8000/chat"
+        : "https://964f0ae3d2a3.ngrok-free.app/chat";
+      // const API_URL = "http://127.0.0.1:8000/chat"
+      const messagesContainer = document.getElementById("messages-container");
+      const sendButton = document.getElementById("send-button");
+      const userInput = document.getElementById("user-input");
+      const pdfSelector = document.getElementById("pdf-selector");
+      const selectedDocInfo = document.getElementById("selected-doc-info");
+      const selectedDocName = document.getElementById("selected-doc-name");
+      const inputContainer = document.getElementById("input-container");
+      const welcomeMessage = document.getElementById("welcome-message");
+      
+      let messages = [];
+      let isProcessing = false;
+      let selectedPDF = "";
+
+      // Configure marked for safe rendering
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+        sanitize: false,
+      });
+
+      // Handle PDF selection
+      function handlePDFSelection() {
+        selectedPDF = pdfSelector.value;
+        
+        if (selectedPDF) {
+          // Enable input
+          inputContainer.classList.remove("input-disabled");
+          userInput.disabled = false;
+          sendButton.disabled = false;
+          userInput.placeholder = `Ask about ${getDocumentDisplayName(selectedPDF)}...`;
+          
+          // Show selected document info
+          selectedDocInfo.style.display = "flex";
+          selectedDocName.textContent = getDocumentDisplayName(selectedPDF);
+          
+          // Clear messages and show new welcome
+          messagesContainer.innerHTML = "";
+          showWelcomeMessage();
+          messages = []; // Reset conversation
+          
+          // Focus input
+          userInput.focus();
+        } else {
+          // Disable input
+          inputContainer.classList.add("input-disabled");
+          userInput.disabled = true;
+          sendButton.disabled = true;
+          userInput.placeholder = "Select a document first...";
+          
+          // Hide selected document info
+          selectedDocInfo.style.display = "none";
+          
+          // Show default welcome
+          messagesContainer.innerHTML = "";
+          showDefaultWelcome();
+          messages = [];
+        }
+      }
+
+      function getDocumentDisplayName(filename) {
+        const nameMap = {
+          "BD_and_PM_Workflow_Management.pdf": "BD and PM Workflow Management",
+          "Business_Development_Process.pdf": "Business Development Process",
+          "Office_Admin_Process.pdf": "Office Admin Process",
+          "PM_Project_Team_Workflow.pdf": "PM Project Team Workflow",
+          "Project_Manager_Responsibilities.pdf": "Project Manager Responsibilities",
+          "Team_Workflow_Responsbilities.pdf": "Team Workflow Responsibilities",
+          "Zoho_Sprints_Management_Process.pdf": "Zoho Sprints Management Process"
+        };
+        return nameMap[filename] || filename.replace('.pdf', '');
+      }
+
+      function showDefaultWelcome() {
+        const welcomeDiv = document.createElement("div");
+        welcomeDiv.className = "welcome-message";
+        welcomeDiv.innerHTML = `
+          <i class="fas fa-comments"></i>
+          <div>Welcome to IR Solution ChatBot!</div>
+          <div>Please select a document from the dropdown above to start chatting.</div>
+          <div class="no-pdf-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            You must select a document before asking questions.
+          </div>
+        `;
+        messagesContainer.appendChild(welcomeDiv);
+      }
+
+      function showWelcomeMessage() {
+        const docName = getDocumentDisplayName(selectedPDF);
+        const welcomeDiv = document.createElement("div");
+        welcomeDiv.className = "welcome-message";
+        welcomeDiv.innerHTML = `
+          <i class="fas fa-file-pdf" style="color: #dc3545;"></i>
+          <div>Welcome to ${docName} ChatBot!</div>
+          <div>Ask me anything about the ${docName} document and I'll help you find the information you need.</div>
+        `;
+        messagesContainer.appendChild(welcomeDiv);
+      }
+
+      // Auto-resize textarea
+      userInput.addEventListener("input", function () {
+        this.style.height = "auto";
+        this.style.height = Math.min(this.scrollHeight, 120) + "px";
+      });
+
+      function addMessage(role, content, isTyping = false) {
+        // Remove welcome message if it exists
+        const welcomeMsg = messagesContainer.querySelector(".welcome-message");
+        if (welcomeMsg) {
+          welcomeMsg.remove();
+        }
+
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message";
+
+        const messageWrapper = document.createElement("div");
+        messageWrapper.className = `message-wrapper ${role}`;
+
+        const avatar = document.createElement("div");
+        avatar.className = `avatar ${role}`;
+        avatar.innerHTML =
+          role === "user"
+            ? '<i class="fas fa-user"></i>'
+            : '<i class="fas fa-robot"></i>';
+
+        const messageContent = document.createElement("div");
+        messageContent.className = `message-content ${isTyping ? "typing" : ""}`;
+
+        if (isTyping) {
+          messageContent.innerHTML =
+            '<span class="typing-animation">Thinking</span>';
+        } else if (role === "user") {
+          messageContent.textContent = content;
+        } else {
+          const formattedContent = document.createElement("div");
+          formattedContent.className = "formatted-content";
+          formattedContent.innerHTML = formatResponse(content);
+          messageContent.appendChild(formattedContent);
+
+          const copyButton = document.createElement("button");
+          copyButton.className = "copy-button";
+          copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+          copyButton.title = "Copy response";
+          copyButton.onclick = function (e) {
+            e.stopPropagation();
+            copyToClipboard(content);
+            copyButton.innerHTML = '<i class="fas fa-check"></i>';
+            setTimeout(() => {
+              copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+            }, 2000);
+          };
+          messageContent.appendChild(copyButton);
+        }
+
+        messageWrapper.appendChild(avatar);
+        messageWrapper.appendChild(messageContent);
+        messageDiv.appendChild(messageWrapper);
+        messagesContainer.appendChild(messageDiv);
+
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        return messageContent;
+      }
+
+      function formatResponse(content) {
+        let html = marked.parse(content);
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = html;
+
+        tempDiv.querySelectorAll("h1, h2, h3, h4").forEach((el) => {
+          el.classList.add("formatted-heading");
+        });
+        tempDiv.querySelectorAll("p").forEach((el) => {
+          el.classList.add("formatted-paragraph");
+        });
+        tempDiv.querySelectorAll("ul, ol").forEach((el) => {
+          el.classList.add("formatted-list");
+        });
+        tempDiv.querySelectorAll("blockquote").forEach((el) => {
+          el.classList.add("formatted-blockquote");
+        });
+        tempDiv.querySelectorAll("pre").forEach((el) => {
+          el.classList.add("formatted-codeblock");
+        });
+
+        return tempDiv.innerHTML;
+      }
+
+      function updateMessage(msgDiv, content, isError = false) {
+        if (isError) {
+          msgDiv.className = msgDiv.className.replace("typing", "") + " error-message";
+          msgDiv.textContent = content;
+        } else {
+          msgDiv.className = msgDiv.className.replace("typing", "");
+
+          let formattedContent = msgDiv.querySelector(".formatted-content");
+          if (!formattedContent) {
+            formattedContent = document.createElement("div");
+            formattedContent.className = "formatted-content";
+            msgDiv.innerHTML = "";
+            msgDiv.appendChild(formattedContent);
+          }
+
+          formattedContent.innerHTML = formatResponse(content);
+
+          if (msgDiv.closest(".message-wrapper").classList.contains("assistant")) {
+            const copyButton = document.createElement("button");
+            copyButton.className = "copy-button";
+            copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+            copyButton.title = "Copy response";
+            copyButton.onclick = function (e) {
+              e.stopPropagation();
+              copyToClipboard(content);
+              copyButton.innerHTML = '<i class="fas fa-check"></i>';
+              setTimeout(() => {
+                copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+              }, 2000);
+            };
+            msgDiv.appendChild(copyButton);
+          }
+        }
+
+        setTimeout(() => {
+          msgDiv.querySelectorAll("pre code").forEach((block) => {
+            hljs.highlightElement(block);
+          });
+        }, 0);
+
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          console.log("Response copied to clipboard");
+        }).catch((err) => {
+          console.error("Failed to copy: ", err);
+        });
+      }
+
+      function updateSendButton(sending = false) {
+        if (sending) {
+          sendButton.disabled = true;
+          sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        } else {
+          sendButton.disabled = selectedPDF === "";
+          sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        }
+      }
+
+      async function sendMessage() {
+        const question = userInput.value.trim();
+        if (!question || isProcessing || !selectedPDF) return;
+
+        isProcessing = true;
+        updateSendButton(true);
+
+        addMessage("user", question);
+        const typingIndicator = addMessage("assistant", "", true);
+
+        userInput.value = "";
+        userInput.style.height = "auto";
+
+        messages.push({ role: "user", content: question });
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              question: question,
+              selected_pdf: selectedPDF,
+              messages: messages.slice(-5) // Send last 5 messages for context
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let fullResponse = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            fullResponse += chunk;
+            updateMessage(typingIndicator, fullResponse);
+          }
+
+          messages.push({ role: "assistant", content: fullResponse });
+
+        } catch (error) {
+          console.error("Error fetching response:", error);
+          const errorMessage = "I'm sorry, I'm experiencing technical difficulties. Please try again later.";
+          updateMessage(typingIndicator, errorMessage, true);
+          messages.push({ role: "assistant", content: errorMessage });
+        } finally {
+          isProcessing = false;
+          updateSendButton(false);
+        }
+      }
+    </script>
+  </body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IR Solution ChatBot</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 15px 20px;
+        text-align: center;
+        position: relative;
+      }
+
+      .header h1 {
+        color: white;
+        font-size: 1.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .header .subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        margin-top: 5px;
+        font-weight: 300;
+      }
+
+      /* PDF Selection Styles */
+      .pdf-selection {
+        margin-top: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .pdf-selection label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      #pdf-selector {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-size: 0.9rem;
+        outline: none;
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        min-width: 200px;
+      }
+
+      #pdf-selector:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      #pdf-selector:focus {
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+      }
+
+      #pdf-selector option {
+        background: #667eea;
+        color: white;
+        padding: 8px;
+      }
+
+      .selected-doc-info {
+        margin-top: 8px;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      .chat-wrapper {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        overflow: hidden;
+      }
+
+      #chat-container {
+        width: 100%;
+        max-width: 800px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .messages-container {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+      }
+
+      .messages-container::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .messages-container::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 3px;
+      }
+
+      .messages-container::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+      }
+
+      .messages-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+      }
+
+      .message {
+        margin-bottom: 20px;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .message-wrapper.user {
+        flex-direction: row-reverse;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .avatar.user {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+      }
+
+      .avatar.assistant {
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        color: white;
+      }
+
+      .message-content {
+        max-width: 75%;
+        padding: 15px 18px;
+        border-radius: 18px;
+        position: relative;
+        word-wrap: break-word;
+        line-height: 1.5;
+        font-size: 14px;
+      }
+
+      .user .message-content {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-bottom-right-radius: 6px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      .assistant .message-content {
+        background: #f8f9fa;
+        color: #333;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom-left-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Formatted content styles */
+      .formatted-content {
+        line-height: 1.6;
+      }
+
+      .formatted-content h1,
+      .formatted-content h2,
+      .formatted-content h3,
+      .formatted-content h4 {
+        margin: 1em 0 0.5em 0;
+        color: #2c3e50;
+      }
+
+      .formatted-content p {
+        margin: 0.8em 0;
+      }
+
+      .formatted-content ul,
+      .formatted-content ol {
+        margin: 0.8em 0;
+        padding-left: 1.5em;
+      }
+
+      .formatted-content li {
+        margin: 0.4em 0;
+      }
+
+      .formatted-content blockquote {
+        border-left: 4px solid #667eea;
+        padding-left: 1em;
+        margin: 1em 0;
+        color: #6c757d;
+        font-style: italic;
+      }
+
+      .formatted-content code {
+        background: rgba(0, 0, 0, 0.05);
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.9em;
+      }
+
+      .formatted-content pre {
+        background: #2d2d2d;
+        color: #f8f8f2;
+        padding: 1em;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1em 0;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.9em;
+        line-height: 1.5;
+      }
+
+      .formatted-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1em 0;
+      }
+
+      .formatted-content table th,
+      .formatted-content table td {
+        border: 1px solid #dee2e6;
+        padding: 0.75em;
+        text-align: left;
+      }
+
+      .formatted-content table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+      }
+
+      .formatted-content table tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+
+      .formatted-content a {
+        color: #667eea;
+        text-decoration: none;
+      }
+
+      .formatted-content a:hover {
+        text-decoration: underline;
+      }
+
+      .typing {
+        background: #e9ecef !important;
+        color: #666 !important;
+        font-style: italic;
+      }
+
+      .typing-animation {
+        display: inline-block;
+      }
+
+      .typing-animation::after {
+        content: "●●●";
+        animation: typing 1.4s infinite;
+        color: #007bff;
+      }
+
+      @keyframes typing {
+        0%,
+        60%,
+        100% {
+          opacity: 0.3;
+        }
+        30% {
+          opacity: 1;
+        }
+      }
+
+      .input-section {
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      #input-container {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        position: relative;
+      }
+
+      .input-wrapper {
+        flex: 1;
+        position: relative;
+      }
+
+      #user-input {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        border-radius: 25px;
+        outline: none;
+        font-size: 14px;
+        font-family: inherit;
+        background: white;
+        transition: all 0.3s ease;
+        resize: none;
+        min-height: 50px;
+        max-height: 120px;
+        line-height: 1.4;
+      }
+
+      #user-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      #user-input::placeholder {
+        color: #adb5bd;
+      }
+
+      #send-button {
+        width: 50px;
+        height: 50px;
+        border: none;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        flex-shrink: 0;
+      }
+
+      #send-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+      }
+
+      #send-button:active {
+        transform: translateY(0);
+      }
+
+      #send-button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .welcome-message {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .welcome-message i {
+        font-size: 48px;
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+
+      .status-indicator {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.8rem;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #28a745;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .error-message {
+        background: #f8d7da !important;
+        color: #721c24 !important;
+        border: 1px solid #f5c6cb !important;
+      }
+
+      .copy-button {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 4px;
+        color: white;
+        padding: 4px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .message-content:hover .copy-button {
+        opacity: 1;
+      }
+
+      .formatted-heading,
+      .formatted-paragraph,
+      .formatted-list,
+      .formatted-blockquote,
+      .formatted-codeblock {
+        margin-bottom: 1em;
+      }
+
+      .formatted-paragraph:last-child,
+      .formatted-list:last-child,
+      .formatted-codeblock:last-child {
+        margin-bottom: 0;
+      }
+
+      .formatted-heading {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-top: 1.5em;
+      }
+
+      .formatted-list {
+        padding-left: 1.2em;
+        list-style-type: disc;
+      }
+
+      .formatted-list li {
+        margin-bottom: 0.5em;
+      }
+
+      .formatted-blockquote {
+        border-left: 4px solid #667eea;
+        padding: 0.8em 1em;
+        font-style: italic;
+        color: #555;
+        background-color: #f0f4f8;
+        border-radius: 4px;
+      }
+
+      .formatted-codeblock {
+        background: #f4f4f4 !important;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1em;
+        overflow-x: auto;
+      }
+
+      .formatted-codeblock code {
+        background: none;
+        font-size: 0.9em;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .chat-wrapper {
+          padding: 10px;
+        }
+
+        .message-content {
+          max-width: 85%;
+          padding: 12px 15px;
+          font-size: 13px;
+        }
+
+        .avatar {
+          width: 32px;
+          height: 32px;
+          font-size: 14px;
+        }
+
+        .header h1 {
+          font-size: 1.4rem;
+        }
+
+        .pdf-selection {
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        #pdf-selector {
+          min-width: 180px;
+        }
+
+        .input-section {
+          padding: 15px;
+        }
+
+        #user-input {
+          font-size: 16px;
+        }
+
+        .formatted-content pre {
+          padding: 0.8em;
+          font-size: 0.85em;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .message-content {
+          max-width: 90%;
+        }
+
+        .header {
+          padding: 10px 15px;
+        }
+
+        .header h1 {
+          font-size: 1.2rem;
+        }
+
+        .pdf-selection {
+          margin-top: 10px;
+        }
+
+        .formatted-content pre {
+          padding: 0.6em;
+          font-size: 0.8em;
+        }
+      }
+
+      /* No PDF selected warning */
+      .no-pdf-warning {
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        color: #856404;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      .input-disabled {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>
+        <i class="fas fa-robot"></i>
+        IR Solution ChatBot
+      </h1>
+      <div class="subtitle">Your intelligent document assistant</div>
+
+      <div class="pdf-selection">
+        <label for="pdf-selector">
+          <i class="fas fa-file-pdf"></i> Select Document:
+        </label>
+        <select id="pdf-selector" onchange="handlePDFSelection()">
+          <option value="">-- Choose a document --</option>
+          <option value="BD_and_PM_Workflow_Management.pdf">
+            BD and PM Workflow Management
+          </option>
+          <option value="Business_Development_Process.pdf">
+            Business Development Process
+          </option>
+          <option value="Office_Admin_Process.pdf">Office Admin Process</option>
+          <option value="PM_Project_Team_Workflow.pdf">
+            PM Project Team Workflow
+          </option>
+          <option value="Project_Manager_Responsibilities.pdf">
+            Project Manager Responsibilities
+          </option>
+          <option value="Team_Workflow_Responsbilities.pdf">
+            Team Workflow Responsibilities
+          </option>
+          <option value="Zoho_Sprints_Management_Process.pdf">
+            Zoho Sprints Management Process
+          </option>
+        </select>
+      </div>
+
+      <div
+        class="selected-doc-info"
+        id="selected-doc-info"
+        style="display: none"
+      >
+        <i class="fas fa-check-circle"></i>
+        <span id="selected-doc-name"></span>
+      </div>
+
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        Online
+      </div>
+    </div>
+
+    <div class="chat-wrapper">
+      <div id="chat-container">
+        <div class="messages-container" id="messages-container">
+          <div class="welcome-message" id="welcome-message">
+            <i class="fas fa-comments"></i>
+            <div>Welcome to IR Solution ChatBot!</div>
+            <div>
+              Please select a document from the dropdown above to start
+              chatting.
+            </div>
+            <div class="no-pdf-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              You must select a document before asking questions.
+            </div>
+          </div>
+        </div>
+
+        <div class="input-section">
+          <div id="input-container" class="input-disabled">
+            <div class="input-wrapper">
+              <textarea
+                id="user-input"
+                placeholder="Select a document first..."
+                rows="1"
+                disabled
+              ></textarea>
+            </div>
+            <button
+              id="send-button"
+              onclick="sendMessage()"
+              aria-label="Send message"
+              disabled
+            >
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL =
+        window.location.hostname === "localhost"
+          ? "http://127.0.0.1:8000/chat"
+          : "https://00fca6f7395e.ngrok-free.app/chat";
+      // const API_URL =
+      //   window.location.hostname === "localhost"
+      //     ? "http://127.0.0.1:8000/chat"
+      //     : "https://00fca6f7395e.ngrok-free.app";
+      // const API_URL = "http://127.0.0.1:8000/chat"
+      const messagesContainer = document.getElementById("messages-container");
+      const sendButton = document.getElementById("send-button");
+      const userInput = document.getElementById("user-input");
+      const pdfSelector = document.getElementById("pdf-selector");
+      const selectedDocInfo = document.getElementById("selected-doc-info");
+      const selectedDocName = document.getElementById("selected-doc-name");
+      const inputContainer = document.getElementById("input-container");
+      const welcomeMessage = document.getElementById("welcome-message");
+
+      let messages = [];
+      let isProcessing = false;
+      let selectedPDF = "";
+
+      // Configure marked for safe rendering
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+        sanitize: false,
+      });
+
+      // Handle PDF selection
+      function handlePDFSelection() {
+        selectedPDF = pdfSelector.value;
+
+        if (selectedPDF) {
+          // Enable input
+          inputContainer.classList.remove("input-disabled");
+          userInput.disabled = false;
+          sendButton.disabled = false;
+          userInput.placeholder = `Ask about ${getDocumentDisplayName(
+            selectedPDF
+          )}...`;
+
+          // Show selected document info
+          selectedDocInfo.style.display = "flex";
+          selectedDocName.textContent = getDocumentDisplayName(selectedPDF);
+
+          // Clear messages and show new welcome
+          messagesContainer.innerHTML = "";
+          showWelcomeMessage();
+          messages = []; // Reset conversation
+
+          // Focus input
+          userInput.focus();
+        } else {
+          // Disable input
+          inputContainer.classList.add("input-disabled");
+          userInput.disabled = true;
+          sendButton.disabled = true;
+          userInput.placeholder = "Select a document first...";
+
+          // Hide selected document info
+          selectedDocInfo.style.display = "none";
+
+          // Show default welcome
+          messagesContainer.innerHTML = "";
+          showDefaultWelcome();
+          messages = [];
+        }
+      }
+
+      function getDocumentDisplayName(filename) {
+        const nameMap = {
+          "BD_and_PM_Workflow_Management.pdf": "BD and PM Workflow Management",
+          "Business_Development_Process.pdf": "Business Development Process",
+          "Office_Admin_Process.pdf": "Office Admin Process",
+          "PM_Project_Team_Workflow.pdf": "PM Project Team Workflow",
+          "Project_Manager_Responsibilities.pdf":
+            "Project Manager Responsibilities",
+          "Team_Workflow_Responsbilities.pdf": "Team Workflow Responsibilities",
+          "Zoho_Sprints_Management_Process.pdf":
+            "Zoho Sprints Management Process",
+        };
+        return nameMap[filename] || filename.replace(".pdf", "");
+      }
+
+      function showDefaultWelcome() {
+        const welcomeDiv = document.createElement("div");
+        welcomeDiv.className = "welcome-message";
+        welcomeDiv.innerHTML = `
+          <i class="fas fa-comments"></i>
+          <div>Welcome to IR Solution ChatBot!</div>
+          <div>Please select a document from the dropdown above to start chatting.</div>
+          <div class="no-pdf-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            You must select a document before asking questions.
+          </div>
+        `;
+        messagesContainer.appendChild(welcomeDiv);
+      }
+
+      function showWelcomeMessage() {
+        const docName = getDocumentDisplayName(selectedPDF);
+        const welcomeDiv = document.createElement("div");
+        welcomeDiv.className = "welcome-message";
+        welcomeDiv.innerHTML = `
+          <i class="fas fa-file-pdf" style="color: #dc3545;"></i>
+          <div>Welcome to ${docName} ChatBot!</div>
+          <div>Ask me anything about the ${docName} document and I'll help you find the information you need.</div>
+        `;
+        messagesContainer.appendChild(welcomeDiv);
+      }
+
+      // Auto-resize textarea
+      userInput.addEventListener("input", function () {
+        this.style.height = "auto";
+        this.style.height = Math.min(this.scrollHeight, 120) + "px";
+      });
+
+      // Add event listener for Enter key
+      userInput.addEventListener("keypress", function (event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault(); // Prevents a new line from being added
+          sendMessage();
+        }
+      });
+
+      function addMessage(role, content, isTyping = false) {
+        // Remove welcome message if it exists
+        const welcomeMsg = messagesContainer.querySelector(".welcome-message");
+        if (welcomeMsg) {
+          welcomeMsg.remove();
+        }
+
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message";
+
+        const messageWrapper = document.createElement("div");
+        messageWrapper.className = `message-wrapper ${role}`;
+
+        const avatar = document.createElement("div");
+        avatar.className = `avatar ${role}`;
+        avatar.innerHTML =
+          role === "user"
+            ? '<i class="fas fa-user"></i>'
+            : '<i class="fas fa-robot"></i>';
+
+        const messageContent = document.createElement("div");
+        messageContent.className = `message-content ${
+          isTyping ? "typing" : ""
+        }`;
+
+        if (isTyping) {
+          messageContent.innerHTML =
+            '<span class="typing-animation">Thinking</span>';
+        } else if (role === "user") {
+          messageContent.textContent = content;
+        } else {
+          const formattedContent = document.createElement("div");
+          formattedContent.className = "formatted-content";
+          formattedContent.innerHTML = formatResponse(content);
+          messageContent.appendChild(formattedContent);
+
+          const copyButton = document.createElement("button");
+          copyButton.className = "copy-button";
+          copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+          copyButton.title = "Copy response";
+          copyButton.onclick = function (e) {
+            e.stopPropagation();
+            copyToClipboard(content);
+            copyButton.innerHTML = '<i class="fas fa-check"></i>';
+            setTimeout(() => {
+              copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+            }, 2000);
+          };
+          messageContent.appendChild(copyButton);
+        }
+
+        messageWrapper.appendChild(avatar);
+        messageWrapper.appendChild(messageContent);
+        messageDiv.appendChild(messageWrapper);
+        messagesContainer.appendChild(messageDiv);
+
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        return messageContent;
+      }
+
+      function formatResponse(content) {
+        let html = marked.parse(content);
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = html;
+
+        tempDiv.querySelectorAll("h1, h2, h3, h4").forEach((el) => {
+          el.classList.add("formatted-heading");
+        });
+        tempDiv.querySelectorAll("p").forEach((el) => {
+          el.classList.add("formatted-paragraph");
+        });
+        tempDiv.querySelectorAll("ul, ol").forEach((el) => {
+          el.classList.add("formatted-list");
+        });
+        tempDiv.querySelectorAll("blockquote").forEach((el) => {
+          el.classList.add("formatted-blockquote");
+        });
+        tempDiv.querySelectorAll("pre").forEach((el) => {
+          el.classList.add("formatted-codeblock");
+        });
+
+        return tempDiv.innerHTML;
+      }
+
+      function updateMessage(msgDiv, content, isError = false) {
+        if (isError) {
+          msgDiv.className =
+            msgDiv.className.replace("typing", "") + " error-message";
+          msgDiv.textContent = content;
+        } else {
+          msgDiv.className = msgDiv.className.replace("typing", "");
+
+          let formattedContent = msgDiv.querySelector(".formatted-content");
+          if (!formattedContent) {
+            formattedContent = document.createElement("div");
+            formattedContent.className = "formatted-content";
+            msgDiv.innerHTML = "";
+            msgDiv.appendChild(formattedContent);
+          }
+
+          formattedContent.innerHTML = formatResponse(content);
+
+          if (
+            msgDiv.closest(".message-wrapper").classList.contains("assistant")
+          ) {
+            const copyButton = document.createElement("button");
+            copyButton.className = "copy-button";
+            copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+            copyButton.title = "Copy response";
+            copyButton.onclick = function (e) {
+              e.stopPropagation();
+              copyToClipboard(content);
+              copyButton.innerHTML = '<i class="fas fa-check"></i>';
+              setTimeout(() => {
+                copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+              }, 2000);
+            };
+            msgDiv.appendChild(copyButton);
+          }
+        }
+
+        setTimeout(() => {
+          msgDiv.querySelectorAll("pre code").forEach((block) => {
+            hljs.highlightElement(block);
+          });
+        }, 0);
+
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      function copyToClipboard(text) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            console.log("Response copied to clipboard");
+          })
+          .catch((err) => {
+            console.error("Failed to copy: ", err);
+          });
+      }
+
+      function updateSendButton(sending = false) {
+        if (sending) {
+          sendButton.disabled = true;
+          sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        } else {
+          sendButton.disabled = selectedPDF === "";
+          sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        }
+      }
+
+      async function sendMessage() {
+        const question = userInput.value.trim();
+        if (!question || isProcessing || !selectedPDF) return;
+
+        isProcessing = true;
+        updateSendButton(true);
+
+        addMessage("user", question);
+        const typingIndicator = addMessage("assistant", "", true);
+
+        userInput.value = "";
+        userInput.style.height = "auto";
+
+        messages.push({ role: "user", content: question });
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              question: question,
+              selected_pdf: selectedPDF,
+              messages: messages.slice(-5), // Send last 5 messages for context
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(
+              `HTTP error! status: ${response.status}, message: ${errorText}`
+            );
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let fullResponse = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            fullResponse += chunk;
+            updateMessage(typingIndicator, fullResponse);
+          }
+
+          messages.push({ role: "assistant", content: fullResponse });
+        } catch (error) {
+          console.error("Error fetching response:", error);
+          const errorMessage =
+            "I'm sorry, I'm experiencing technical difficulties. Please try again later.";
+          updateMessage(typingIndicator, errorMessage, true);
+          messages.push({ role: "assistant", content: errorMessage });
+        } finally {
+          isProcessing = false;
+          updateSendButton(false);
+        }
+      }
+    </script>
+  </body>
+</html>
